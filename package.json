@@ -1,0 +1,33 @@
+{
+  "name": "link-service",
+  "version": "1.0.0",
+  "description": "сервис связи с внешними девайсами",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "set APP_DEBUG=true & node dist",
+    "test": "test",
+    "start": "set APP_DEBUG=false & node dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GerasimGerasimov/link-service.git"
+  },
+  "author": "Gerasimov V. Gerasim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GerasimGerasimov/link-service/issues"
+  },
+  "homepage": "https://github.com/GerasimGerasimov/link-service#readme",
+  "devDependencies": {
+    "@types/body-parser": "^1.17.0",
+    "@types/express": "^4.17.0",
+    "@types/express-session": "^1.15.13",
+    "@types/nedb": "^1.8.8",
+    "@types/node": "^12.7.1"
+  },
+  "dependencies": {
+    "@types/serialport": "^7.0.4",
+    "serialport": "^8.0.5"
+  }
+}
