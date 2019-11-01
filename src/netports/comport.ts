@@ -1,18 +1,20 @@
-import NetPorts from "./netports";
+import {NetPorts, iCmd} from "./netports";
 import SerialPort = require('serialport');
 
 export default class ComPort extends NetPorts {
     private isopen: boolean = false; // индикатор открытия для работы
     private Port: any = undefined;   // ссылка на объек порта
-    public  onReadEvent:  Function = null;
-    public  onErrorEvent: Function = null;
+    private onReadEvent:  Function = null;
+    private onErrorEvent: Function = null;
+    private PortName:string;
 
     constructor(settings: any){
         super(settings);
         this.configure(settings);
-        console.log('SerialPorts created')
+        console.log('ComPort class created')
     }
     configure(settings: any): void {
+        this.PortName = settings.port;
         this.Port = new SerialPort(settings.port, settings.settings);
             let self = this;
             //установить обработчики событий
@@ -22,40 +24,44 @@ export default class ComPort extends NetPorts {
             this.Port.on('data',  this.onRead.bind(self));
     }
 
-    public setOnRead (onRead: Function, owner: any): void {
-        this.Port.on('data',  onRead.bind(owner));
-    }
-
-    public onRead(data: any, err: any):void {
-        console.log(`onDataRead:> ${data} error:> ${err}`);
+    private onRead(data: any):void {
+        console.log(`${this.PortName} onDataRead:> ${data}`);
         if (this.onReadEvent) this.onReadEvent(data); 
     }
 
-    public onOpen():void {
-        console.log('TSerialPort.Serial port is opened');
+    private onOpen():void {
+        console.log(`ComPort ${this.PortName} is opened`);
         this.isopen = true;//порт открыт можно работать
     }
 
-    public write (msg: any): boolean {
-        const data = Buffer.from(msg);
-        const result = this.Port.write(data);
-        this.Port.drain();
-        return result;
+    //const delay = t => new Promise(resolve => setTimeout(resolve, t));
+
+    public async write (cmd: iCmd): Promise<String> {
+        return new Promise ((resolve, reject) =>{
+            this.Port.write(Buffer.from(cmd.cmd));
+            this.Port.drain();
+            if (!cmd.wait) return resolve(''); //не надо ждать ответа
+            this.onReadEvent = (msg: any) => {
+                return resolve(msg);
+            }
+            this.onErrorEvent = (msg: any) => {
+                new Error(msg);
+            }
+        });
     }
 
-    public onClose():void {
-        console.log('TSerialPort.Serial port is closed');
+    private onClose():void {
+        console.log(`ComPort ${this.PortName} is closed`);
         this.isopen = false;//порт закрыт, низя песать внего и четать из нево
     }
 
     //обработчики событий
-    public onError (err: any){
-        console.log('TSerialPort.Error: ', err.message);
+    private onError (err: any){
+        console.log(`ComPort ${this.PortName} error ${err.message}`);
         if (this.onErrorEvent) this.onErrorEvent(err.message); 
     }
 
     public get isOpen():boolean {
-        let result: boolean = this.isopen;
-        return result;
+        return this.isopen;
     }
 }

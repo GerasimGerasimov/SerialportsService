@@ -1,6 +1,6 @@
 import express = require("express");
 import bodyParser = require('body-parser');
-import NetPorts from "./netports/netports";
+import {NetPorts, iCmd} from "./netports/netports";
 import ComPort from "./netports/comport"
 
 console.log('serial port service start')
@@ -32,26 +32,7 @@ function isComPortOpen (com: NetPorts): void{
     if (!com.isOpen) throw new Error('com is not open')
 }
 
-function write (data: any, wait: boolean): Promise<String> {
-    return new Promise ((resolve, reject) =>{
-        COMx.write(data);
-        if (!wait) return resolve(''); //не надо ждать ответа
-        COMx.onReadEvent = (msg: any) => {
-            return resolve(msg);
-        }
-        COMx.onErrorEvent = (msg: any) => {
-            new Error(msg);
-        }
-
-    });
-}
-
-interface iCmd {
-    cmd: Array<number>;
-    wait?: boolean;
-}
-
-function getCmd (cmd: any): iCmd {
+function getValidCmd (cmd: any): iCmd {
     let result: iCmd = {cmd: [], wait: true};
     if (!cmd.cmd)
         throw new Error ('cmd field is missing');
@@ -67,10 +48,10 @@ app.put('/v1/data/', jsonParser, (request, response) =>{
     (async ()=>{
         try {
             isComPortOpen(COMx);
-            const command = getCmd(request.body);
-            const start = new Date().getTime()
-            const msg = await write(command.cmd, command.wait);
-            const stop = new Date().getTime() 
+            const command: iCmd = getValidCmd(request.body);
+            const start = new Date().getTime();
+            const msg = await COMx.write(command);
+            const stop = new Date().getTime(); 
             response.json( {'status':'OK',
                             'duration':(stop-start),
                             'msg':msg})

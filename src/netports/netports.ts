@@ -1,10 +1,11 @@
-export default abstract class NetPorts  {
-    onReadEvent: Function;
-    onErrorEvent: Function;
+export abstract class NetPorts  {
     constructor(settings: any) {};
-    abstract configure(settings: any): void;
-    abstract onError(err: any):void;
-    abstract onRead(data: any, err: any):void;
-    abstract write (msg: any): boolean;
     abstract get isOpen():boolean;
+    abstract write (cmd: iCmd): Promise<String>;
+}
+
+export interface iCmd {
+    cmd: Array<number>;
+    timeOut?:Number;
+    wait?: boolean;
 }
