@@ -2,26 +2,29 @@ import {NetPorts, iCmd} from "./netports";
 import SerialPort = require('serialport');
 
 export default class ComPort extends NetPorts {
+    private portName:string;    
     private isopen: boolean = false; // индикатор открытия для работы
-    private Port: any = undefined;   // ссылка на объек порта
+    private Port: any = undefined;   // ссылка на объект порта
     private onReadEvent:  Function = null;
     private onErrorEvent: Function = null;
-    private PortName:string;
+    private ReConnectTimerID: any = null;
+    private PortSettings: any;
 
     constructor(settings: any){
         super(settings);
+        this.PortSettings = settings;
         this.configure(settings);
         console.log('ComPort class created')
     }
     configure(settings: any): void {
-        this.PortName = settings.port;
+        this.portName = settings.port;
         this.Port = new SerialPort(settings.port, settings.settings);
-            let self = this;
-            //установить обработчики событий
-            this.Port.on('open',  this.onOpen.bind(self));
-            this.Port.on('close', this.onClose.bind(self));
-            this.Port.on('error', this.onError.bind(self));
-            this.Port.on('data',  this.onRead.bind(self));
+        let self = this;
+        //установить обработчики событий
+        this.Port.on('open',  this.onOpen.bind(self));
+        this.Port.on('close', this.onClose.bind(self));
+        this.Port.on('error', this.onError.bind(self));
+        this.Port.on('data',  this.onRead.bind(self));
     }
 
     private onRead(data: any):void {
@@ -32,6 +35,10 @@ export default class ComPort extends NetPorts {
     private onOpen():void {
         console.log(`ComPort ${this.PortName} is opened`);
         this.isopen = true;//порт открыт можно работать
+        if (this.ReConnectTimerID) {
+            clearInterval(this.ReConnectTimerID);
+            this.ReConnectTimerID = null;
+        }
     }
 
     public async write (cmd: iCmd): Promise<String> {
@@ -53,18 +60,32 @@ export default class ComPort extends NetPorts {
         });
     }
 
+    private reConnect(): void {
+        if (this.ReConnectTimerID) return;
+        this.ReConnectTimerID = setInterval(()=>{
+            console.log(`ComPort ${this.PortName} try to reconnect`)
+            this.configure(this.PortSettings);
+        }, 1000);
+    }
+
     private onClose():void {
         console.log(`ComPort ${this.PortName} is closed`);
+        this.reConnect();
         this.isopen = false;//порт закрыт, низя песать внего и четать из нево
     }
 
     //обработчики событий
     private onError (err: any){
         console.log(`ComPort ${this.PortName} error ${err.message}`);
+        if (!this.ReConnectTimerID) this.reConnect();  
         if (this.onErrorEvent) this.onErrorEvent(err.message); 
     }
 
     public get isOpen():boolean {
         return this.isopen;
+    }
+
+    public get PortName():string {
+        return this.portName;
     }
 }

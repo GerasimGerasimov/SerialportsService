@@ -28,7 +28,7 @@ app.all('*', function(req, res, next) {
 });
 
 function isComPortOpen (com: NetPorts): void{
-    if (!com.isOpen) throw new Error('com is not open')
+    if (!com.isOpen) throw new Error(`ComPort ${com.PortName} is not open`)
 }
 
 function getValidCmd (cmd: any): iCmd {
