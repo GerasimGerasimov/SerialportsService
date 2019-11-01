@@ -40,7 +40,9 @@ function getValidCmd (cmd: any): iCmd {
         throw new Error ('cmd field is empty');
     result.cmd = cmd.cmd;
     result.timeOut = cmd.timeOut || 1000;
-    result.wait = cmd.wait || true;
+    //валидация boolean с присвоением false а по умолчанию true
+    //без этой конструкции всегда присваивался true
+    result.wait = (typeof cmd.wait !== 'undefined') ? cmd.wait : true ;
     return result;
 }
 
@@ -55,6 +57,7 @@ app.put('/v1/data/', jsonParser, (request, response) =>{
             const stop = new Date().getTime(); 
             response.json( {'status':'OK',
                             'duration':(stop-start),
+                            'time': new Date().toISOString(),
                             'msg':msg})
         } catch (e) {
             response.status(400).json({'Status':'Error',
