@@ -44,7 +44,7 @@ export default class ComPort extends NetPorts {
                 }, cmd.timeOut)
             this.onReadEvent = (msg: any) => {
                 clearTimeout(timerId);
-                return resolve(msg);
+                return resolve(Array.prototype.slice.call(msg,0));
             }
             this.onErrorEvent = (msg: any) => {
                 clearTimeout(timerId);

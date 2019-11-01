@@ -2,19 +2,18 @@ import express = require("express");
 import bodyParser = require('body-parser');
 import {NetPorts, iCmd} from "./netports/netports";
 import ComPort from "./netports/comport"
-
+//
 console.log('serial port service start')
-
-const settings = {
-    port:'COM3',//название порта
-        settings: { // настройки порта
-              baudRate: 115200, // this is synced to what was set for the Arduino Code
-              dataBits: 8, // this is the default for Arduino serial communication
-              parity: 'none', // this is the default for Arduino serial communication
-              stopBits: 1, // this is the default for Arduino serial communication
-              flowControl: false // this is the default for Arduino serial communication
-          }
-    }
+//в аргументе указал какой файл конфигурации требуется загрузить
+let nodePath = process.argv[0];
+let appPath = process.argv[1];
+let filename = process.argv[2];
+console.log(`nodePath: ${nodePath}`);
+console.log(`appPath: ${appPath}`);
+console.log(`filename: ${filename}`);//
+//чтению переданный JSON-файл и делаю из него settings 
+var fs = require('fs');
+const settings = JSON.parse(fs.readFileSync(filename, 'utf8'));
 
 let COMx: NetPorts = new ComPort(settings);
 

@@ -1,8 +1,0 @@
-export interface INetPort {
-    configure(jsonConfig: any):void;
-    open():boolean;
-    close():boolean;
-    isOpen():boolean;//открыт порт?
-    read():Promise<string>;
-    write(msg:string):Promise<boolean>;
-}
