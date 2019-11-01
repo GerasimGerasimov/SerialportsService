@@ -34,18 +34,21 @@ export default class ComPort extends NetPorts {
         this.isopen = true;//порт открыт можно работать
     }
 
-    //const delay = t => new Promise(resolve => setTimeout(resolve, t));
-
     public async write (cmd: iCmd): Promise<String> {
         return new Promise ((resolve, reject) =>{
             this.Port.write(Buffer.from(cmd.cmd));
             this.Port.drain();
             if (!cmd.wait) return resolve(''); //не надо ждать ответа
+            const timerId = setTimeout(()=>{
+                reject(new Error ('time out'))
+                }, cmd.timeOut)
             this.onReadEvent = (msg: any) => {
+                clearTimeout(timerId);
                 return resolve(msg);
             }
             this.onErrorEvent = (msg: any) => {
-                new Error(msg);
+                clearTimeout(timerId);
+                reject(new Error(msg));
             }
         });
     }

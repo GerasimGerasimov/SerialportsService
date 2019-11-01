@@ -33,13 +33,14 @@ function isComPortOpen (com: NetPorts): void{
 }
 
 function getValidCmd (cmd: any): iCmd {
-    let result: iCmd = {cmd: [], wait: true};
+    let result: iCmd = {cmd: [], timeOut: 1000, wait: true};
     if (!cmd.cmd)
         throw new Error ('cmd field is missing');
     if (cmd.cmd.length == 0 )
         throw new Error ('cmd field is empty');
     result.cmd = cmd.cmd;
-    result.wait = cmd.wait || true; 
+    result.timeOut = cmd.timeOut || 1000;
+    result.wait = cmd.wait || true;
     return result;
 }
 
