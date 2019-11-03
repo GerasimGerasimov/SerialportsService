@@ -7,7 +7,7 @@ import fs = require('fs');
 //
 console.log('serial port service start')
 
-//чтению переданный JSON-файл и делаю из него settings 
+//читаю переданный JSON-файл и делаю из него settings 
 const settings = JSON.parse(fs.readFileSync(getConfigFile(), 'utf8'));
 const COMx: NetPorts = new ComPort(settings.COM);
 
