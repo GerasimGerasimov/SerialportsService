@@ -26,7 +26,7 @@ function isComPortOpen (com: NetPorts): void{
 }
 
 function getValidCmd (cmd: any): iCmd {
-    let result: iCmd = {cmd: [], timeOut: 1000, wait: true};
+    let result: iCmd = {cmd: [], timeOut: 1000, NotRespond: false};
     if (!cmd.cmd)
         throw new Error ('cmd field is missing');
     if (cmd.cmd.length == 0 )
@@ -35,7 +35,7 @@ function getValidCmd (cmd: any): iCmd {
     result.timeOut = cmd.timeOut || 1000;
     //валидация boolean с присвоением false а по умолчанию true
     //без этой конструкции всегда присваивался true
-    result.wait = (typeof cmd.wait !== 'undefined') ? cmd.wait : true ;
+    result.NotRespond = (typeof cmd.wait !== 'undefined') ? cmd.wait : false ;
     return result;
 }
 

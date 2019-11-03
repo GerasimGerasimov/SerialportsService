@@ -45,7 +45,7 @@ export default class ComPort extends NetPorts {
         return new Promise ((resolve, reject) =>{
             this.Port.write(Buffer.from(cmd.cmd));
             this.Port.drain();
-            if (!cmd.wait) return resolve(''); //не надо ждать ответа
+            if (cmd.NotRespond) return resolve(''); //не надо ждать ответа
             const timerId = setTimeout(()=>{
                 reject(new Error ('time out'))
                 }, cmd.timeOut)

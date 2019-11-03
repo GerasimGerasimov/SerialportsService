@@ -8,5 +8,5 @@ export abstract class NetPorts  {
 export interface iCmd {
     cmd: Array<number>;
     timeOut?:number;
-    wait?: boolean;
+    NotRespond?: boolean;
 }
