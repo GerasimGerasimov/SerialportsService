@@ -2,20 +2,14 @@ import express = require("express");
 import bodyParser = require('body-parser');
 import {NetPorts, iCmd} from "./netports/netports";
 import ComPort from "./netports/comport"
+import {getConfigFile} from "./utils/utils"
+import fs = require('fs');
 //
 console.log('serial port service start')
-//в аргументе указал какой файл конфигурации требуется загрузить
-let nodePath = process.argv[0];
-let appPath = process.argv[1];
-let filename = process.argv[2];
-console.log(`nodePath: ${nodePath}`);
-console.log(`appPath: ${appPath}`);
-console.log(`filename: ${filename}`);//
-//чтению переданный JSON-файл и делаю из него settings 
-var fs = require('fs');
-const settings = JSON.parse(fs.readFileSync(filename, 'utf8'));
 
-let COMx: NetPorts = new ComPort(settings);
+//чтению переданный JSON-файл и делаю из него settings 
+const settings = JSON.parse(fs.readFileSync(getConfigFile(), 'utf8'));
+const COMx: NetPorts = new ComPort(settings.COM);
 
 const app = express();
 const jsonParser = bodyParser.json()
@@ -65,4 +59,4 @@ app.put('/v1/data/', jsonParser, (request, response) =>{
     })();
 })
 
-app.listen(5000)
+app.listen(settings.HOST.port)

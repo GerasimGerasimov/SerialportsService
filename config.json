@@ -1,5 +1,9 @@
 {
-    "port":"COM3",
+    "HOST":{
+        "port": 5000
+    },
+    "COM":{
+        "port":"COM3",
         "settings": {
               "baudRate": 115200,
               "dataBits": 8,
@@ -7,4 +11,5 @@
               "stopBits": 1,
               "flowControl": false
           }
+    }
 }
