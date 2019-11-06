@@ -53,8 +53,8 @@ app.put('/v1/data/', jsonParser, (request, response) =>{
                             'time': new Date().toISOString(),
                             'msg':msg})
         } catch (e) {
-            response.status(400).json({'Status':'Error',
-                                        'Msg': e.message || ''})
+            response.status(400).json({'status':'Error',
+                                        'msg': e.message || ''})
         };
     })();
 })
