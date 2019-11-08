@@ -68,7 +68,8 @@ export class AppServer implements IServer{
     }
 
     public serve (): void {
-        app.put('/v1/data/', jsonParser, (request, response)=>{this.put(request, response)});
+        app.route('/v1/data/')
+            .put(jsonParser, [this.put.bind(this)]);
         app.listen(this.port);
     } 
 }
