@@ -6,7 +6,11 @@ import bodyParser = require('body-parser');
 const app = express();
 const jsonParser = bodyParser.json()
 
-export class App {
+export interface IServer {
+    serve (): void;
+}
+
+export class AppServer implements IServer{
 
     private port: number;
     private com: NetPorts;
