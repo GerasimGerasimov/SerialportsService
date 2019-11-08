@@ -1,5 +1,4 @@
 import {NetPorts, iCmd} from "../netports/netports";
-
 import express = require("express");
 import bodyParser = require('body-parser');
 
