@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GerasimGerasimov/link-service.git"
+    "url": "git+https://github.com/GerasimGerasimov/SerialportService.git"
   },
   "author": "Gerasimov V. Gerasim",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/GerasimGerasimov/link-service/issues"
+    "url": "https://github.com/GerasimGerasimov/SerialportService/issues"
   },
-  "homepage": "https://github.com/GerasimGerasimov/link-service#readme",
+  "homepage": "https://github.com/GerasimGerasimov/SerialportService#readme",
   "devDependencies": {
     "@types/body-parser": "^1.17.0",
     "@types/express": "^4.17.1",
