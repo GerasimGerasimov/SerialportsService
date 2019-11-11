@@ -43,7 +43,7 @@ export class AppServer implements IServer{
         result.timeOut = cmd.timeOut || 1000;
         //валидация boolean с присвоением false а по умолчанию true
         //без этой конструкции всегда присваивался true
-        result.NotRespond = (typeof cmd.wait !== 'undefined') ? cmd.wait : false ;
+        result.NotRespond = (typeof cmd.NotRespond !== 'undefined') ? cmd.NotRespond : false ;
         return result;
     }
 
