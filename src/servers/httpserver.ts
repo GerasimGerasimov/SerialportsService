@@ -1,26 +1,21 @@
-import http = require('http')
-import {NetPorts} from "../netports/netports";
+import http = require('http');
 import express = require("express");
 import bodyParser = require('body-parser');
-import WebSocket = require('ws');
+import {NetPorts} from "../netports/netports";
 
 const app = express();
 const jsonParser = bodyParser.json()
 
-export interface IServer {
-}
-
-export class AppServer implements IServer{
+export class HttpServer{
+    public https: any;
 
     private port: number;
     private com: NetPorts;
-    private https: any;
-    private wss: any;
-
+    
     constructor (port: number, com: NetPorts) {
         this.port = port;
         this.com = com;
-        this.init()
+        this.init();
     }
 
     private init () {
@@ -34,28 +29,6 @@ export class AppServer implements IServer{
             .put(jsonParser, [this.put.bind(this)]);
             
         this.https = http.createServer(app).listen(this.port);
-        this.wss = new WebSocket.Server({server: this.https});
-        this.wss.on('connection', this.connectionOnWss.bind(this));
-    }
-
-    private connectionOnWss( ws: WebSocket) {
-        console.log('Connection');
-        const self = this;
-        ws.on('message', async (message:any)=>{
-            var result: any;
-            try {
-                result = await self.com.getCOMAnswer(JSON.parse(message));
-            } catch (e) {
-                result = {status:'Error',
-                          msg: e.message || ''}
-            }
-            const res = JSON.stringify(result);
-            ws.send(res);
-        });
-
-        ws.on('close', ()=>{
-            console.log('Connection close');
-        })
     }
 
     private async put (request: any, response: any) {
