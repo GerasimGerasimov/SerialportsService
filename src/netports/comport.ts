@@ -16,7 +16,8 @@ export default class ComPort extends NetPorts {
         this.configure(settings);
         console.log('ComPort class created')
     }
-    configure(settings: any): void {
+
+    public configure(settings: any): void {
         this.portName = settings.port;
         this.Port = new SerialPort(settings.port, settings.settings);
         let self = this;
@@ -25,6 +26,22 @@ export default class ComPort extends NetPorts {
         this.Port.on('close', this.onClose.bind(self));
         this.Port.on('error', this.onError.bind(self));
         this.Port.on('data',  this.onRead.bind(self));
+    }
+
+    public async getCOMAnswer(cmd: Object): Promise<any> {
+        try {
+            this.isComPortOpen();
+            const command: iCmd = this.getValidCmd(cmd);
+            const start = new Date().getTime();
+            const msg = await this.write(command);
+            const stop = new Date().getTime(); 
+            return {status:'OK',
+                    duration:(stop-start),
+                    time: new Date().toISOString(),
+                    msg:msg}
+        } catch (e) {
+            throw new Error (e);
+        };
     }
 
     private onRead(data: any):void {
@@ -41,7 +58,7 @@ export default class ComPort extends NetPorts {
         }
     }
 
-    public async write (cmd: iCmd): Promise<String> {
+    private async write (cmd: iCmd): Promise<String> {
         return new Promise ((resolve, reject) =>{
             this.Port.write(Buffer.from(cmd.cmd));
             this.Port.drain();
@@ -81,11 +98,28 @@ export default class ComPort extends NetPorts {
         if (this.onErrorEvent) this.onErrorEvent(err.message); 
     }
 
-    public get isOpen():boolean {
+    private get isOpen():boolean {
         return this.isopen;
     }
 
-    public get PortName():string {
+    private get PortName():string {
         return this.portName;
     }
+
+    private isComPortOpen (): void{
+        if (!this.isOpen) throw new Error(`ComPort ${this.PortName} is not open`)
+    }
+
+    private getValidCmd (cmd: any): iCmd {
+        let result: iCmd = {cmd: [], timeOut: 1000, NotRespond: false};
+        if (!cmd.cmd)
+            throw new Error ('cmd field is missing');
+        if (cmd.cmd.length == 0 )
+            throw new Error ('cmd field is empty');
+        result.cmd = cmd.cmd;
+        result.timeOut = cmd.timeOut || 1000;
+        result.NotRespond = (typeof cmd.NotRespond !== 'undefined') ? cmd.NotRespond : false ;
+        return result;
+    }
+    
 }
