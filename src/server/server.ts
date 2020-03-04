@@ -1,18 +1,30 @@
 import {NetPorts, iCmd} from "../netports/netports";
+const http = require('http')
 import express = require("express");
 import bodyParser = require('body-parser');
+import WebSocket = require('ws');
+/*
+const WebSocketServer = new WebSocket.Server({port: settings.HOST.port});
+
+WebSocketServer.on ('connection', (ws) => {
+    console.log(ws);
+    ws.on
+})
+
+*/
 
 const app = express();
 const jsonParser = bodyParser.json()
 
 export interface IServer {
-    serve (): void;
 }
 
 export class AppServer implements IServer{
 
     private port: number;
     private com: NetPorts;
+    private https: any;
+    private wss: any;
 
     constructor (port: number, com: NetPorts) {
         this.port = port;
@@ -27,6 +39,31 @@ export class AppServer implements IServer{
             res.header('Access-Control-Allow-Headers', 'Content-Type');
             next();
         });
+        app.route('/v1/data/')
+            .put(jsonParser, [this.put.bind(this)]);
+        this.https = http.createServer(app).listen(this.port);
+        this.wss = new WebSocket.Server({server: this.https});
+        this.wss.on('connection', this.connectionOnWss.bind(this));
+    }
+
+    private connectionOnWss( ws: WebSocket) {
+        console.log('Connection');
+        const self = this;
+        ws.on('message', async (message:any)=>{
+            var result: any;
+            try {
+                result = await self.getCOMAnswer(JSON.parse(message));
+            } catch (e) {
+                result = {status:'Error',
+                          msg: e.message || ''}
+            }
+            const res = JSON.stringify(result);
+            ws.send(res);
+        });
+
+        ws.on('close', ()=>{
+            console.log('Connection close');
+        })
     }
 
     private isComPortOpen (com: NetPorts): void{
@@ -41,35 +78,33 @@ export class AppServer implements IServer{
             throw new Error ('cmd field is empty');
         result.cmd = cmd.cmd;
         result.timeOut = cmd.timeOut || 1000;
-        //валидация boolean с присвоением false а по умолчанию true
-        //без этой конструкции всегда присваивался true
         result.NotRespond = (typeof cmd.NotRespond !== 'undefined') ? cmd.NotRespond : false ;
         return result;
     }
-
-    private put (request: any, response: any) {
-        console.log(`/v1/data/PUT> ${request.body.cmd || ''}`);
-        (async ()=>{
-            try {
-                this.isComPortOpen(this.com);
-                const command: iCmd = this.getValidCmd(request.body);
-                const start = new Date().getTime();
-                const msg = await this.com.write(command);
-                const stop = new Date().getTime(); 
-                response.json( {'status':'OK',
-                                'duration':(stop-start),
-                                'time': new Date().toISOString(),
-                                'msg':msg})
-            } catch (e) {
-                response.status(400).json({'status':'Error',
-                                            'msg': e.message || ''})
-            };
-        })();
+    
+    private async getCOMAnswer(cmd: Object): Promise<any> {
+        try {
+            this.isComPortOpen(this.com);
+            const command: iCmd = this.getValidCmd(cmd);
+            const start = new Date().getTime();
+            const msg = await this.com.write(command);
+            const stop = new Date().getTime(); 
+            return {status:'OK',
+                    duration:(stop-start),
+                    time: new Date().toISOString(),
+                    msg:msg}
+        } catch (e) {
+            throw new Error (e);
+        };
     }
 
-    public serve (): void {
-        app.route('/v1/data/')
-            .put(jsonParser, [this.put.bind(this)]);
-        app.listen(this.port);
-    } 
+    private async put (request: any, response: any) {
+        console.log(`/v1/data/PUT> ${request.body.cmd || ''}`);
+            try {
+                response.json(await this.getCOMAnswer(request.body));
+            } catch (e) {
+                response.status(400).json({status:'Error',
+                                           msg: e.message || ''})
+            }
+    }
 }
