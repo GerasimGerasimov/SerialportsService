@@ -20,21 +20,23 @@ export class WSServer{
 
     private connectionOnWss( ws: WebSocket) {
         console.log('Connection');
-        const self = this;
-        ws.on('message', async (message:any)=>{
-            var result: any;
-            try {
-                result = await self.com.getCOMAnswer(JSON.parse(message));
-            } catch (e) {
-                result = {status:'Error',
-                          msg: e.message || ''}
-            }
-            const res = JSON.stringify(result);
-            ws.send(res);
-        });
+        ws.on('message', this.onMessage.bind(this, ws));
+        ws.on('close', this.onClose.bind(this, ws))
+    }
 
-        ws.on('close', ()=>{
-            console.log('Connection close');
-        })
+    private async onMessage(ws: WebSocket, message: any) {
+        var result: any;
+        try {
+            result = await this.com.getCOMAnswer(JSON.parse(message));
+        } catch (e) {
+            result = {status:'Error',
+                      msg: e.message || ''}
+        }
+        const res = JSON.stringify(result);
+        ws.send(res);
+    }
+
+    private onClose(ws: WebSocket){
+        console.log('Connection close');
     }
 }
