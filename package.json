@@ -1,5 +1,5 @@
 {
-  "name": "link-service",
+  "name": "serial-ports-service",
   "version": "1.0.0",
   "description": "сервис связи с внешними девайсами",
   "main": "index.ts",
