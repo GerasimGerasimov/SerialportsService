@@ -9,6 +9,9 @@ export default class ComPort extends NetPorts {
     private onErrorEvent: Function = null;
     private ReConnectTimerID: any = null;
     private PortSettings: any;
+    private ChunkEndTimer: any = null;
+    private ChunkEndTime: number = 10;
+    private Respond: Array<number> = [];
 
     constructor(settings: any){
         super(settings);
@@ -44,9 +47,22 @@ export default class ComPort extends NetPorts {
         };
     }
 
+    private onChunkEndTime():void {
+        console.log(`respond: (${this.ChunkEndTime})`,String.fromCharCode(...this.Respond));
+        if (this.onReadEvent) this.onReadEvent(this.Respond);
+    }
+
+    private restartChunkEndTimer(frameEndTime: number):void {
+        if (this.ChunkEndTimer) clearTimeout(this.ChunkEndTimer);
+        this.ChunkEndTimer = setTimeout(() => {
+            this.onChunkEndTime();
+        }, frameEndTime);
+    }
+
     private onRead(data: any):void {
-        console.log(`${this.PortName} onDataRead:> ${data}`);
-        if (this.onReadEvent) this.onReadEvent(data); 
+        //console.log(`${this.PortName} chunk:> ${data}`);
+        this.Respond.push(...data);
+        this.restartChunkEndTimer(this.ChunkEndTime)
     }
 
     private onOpen():void {
@@ -60,19 +76,25 @@ export default class ComPort extends NetPorts {
 
     private async write (cmd: iCmd): Promise<String> {
         return new Promise ((resolve, reject) =>{
+            if (this.ChunkEndTimer) clearTimeout(this.ChunkEndTimer);
+            this.Respond = [];
+            this.ChunkEndTime = cmd.ChunksEndTime;
             this.Port.write(Buffer.from(cmd.cmd));
             this.Port.drain();
             if (cmd.NotRespond) return resolve(''); //не надо ждать ответа
-            const timerId = setTimeout(()=>{
-                clearTimeout(timerId);
+            
+            const TimeOutTimer = setTimeout(()=>{
+                clearTimeout(TimeOutTimer);
                 reject(new Error ('time out'))
                 }, cmd.timeOut)
+
             this.onReadEvent = (msg: any) => {
-                clearTimeout(timerId);
+                clearTimeout(TimeOutTimer);
                 return resolve(Array.prototype.slice.call(msg,0));
             }
+
             this.onErrorEvent = (msg: any) => {
-                clearTimeout(timerId);
+                clearTimeout(TimeOutTimer);
                 reject(new Error(msg));
             }
         });
@@ -111,15 +133,16 @@ export default class ComPort extends NetPorts {
         if (!this.isOpen) throw new Error(`ComPort ${this.PortName} is not open`)
     }
 
-    private getValidCmd (cmd: any): iCmd {
-        let result: iCmd = {cmd: [], timeOut: 1000, NotRespond: false};
-        if (!cmd.cmd)
+    private getValidCmd (req: any): iCmd {
+        let result: iCmd = {cmd: [], timeOut: 1000, ChunksEndTime:10 ,NotRespond: false};
+        if (!req.cmd)
             throw new Error ('cmd field is missing');
-        if (cmd.cmd.length == 0 )
+        if (req.cmd.length == 0 )
             throw new Error ('cmd field is empty');
-        result.cmd = cmd.cmd;
-        result.timeOut = cmd.timeOut || 1000;
-        result.NotRespond = (typeof cmd.NotRespond !== 'undefined') ? cmd.NotRespond : false ;
+        result.cmd = req.cmd;
+        result.timeOut = req.timeOut || 1000;
+        result.ChunksEndTime = req.ChunksEndTime || 10;
+        result.NotRespond = (typeof req.NotRespond !== 'undefined') ? req.NotRespond : false ;
         return result;
     }
     
