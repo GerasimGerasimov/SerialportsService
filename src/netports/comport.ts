@@ -48,7 +48,7 @@ export default class ComPort extends NetPorts {
     }
 
     private onChunkEndTime():void {
-        console.log(`respond: (${this.ChunkEndTime})`,String.fromCharCode(...this.Respond));
+        console.log(`respond: ${this.Respond}`);//String.fromCharCode(...this.Respond));
         if (this.onReadEvent) this.onReadEvent(this.Respond);
     }
 
